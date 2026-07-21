@@ -21,17 +21,17 @@ from helpers import default_http_timeout
 
 _CHANNEL_HTTP_TIMEOUT = default_http_timeout(15.0)
 
-# Only ``console`` is a hard required built-in (see
-# ``registry._REQUIRED_CHANNEL_KEYS``). All other channels (feishu, dingtalk,
-# qq, wecom, ...) depend on optional third-party SDKs that may be uninstalled
-# or uninstallable on a given platform (e.g. lark-oapi on macOS). The registry
-# is designed to skip such channels gracefully, so this test must NOT assert
-# the full hard-coded set — only the guaranteed-required subset.
+# CoPaw's channel registry (``registry._load_builtin_channels``) is designed
+# to skip any channel whose third-party SDK fails to import (e.g. ``feishu``
+# when ``lark-oapi`` is unavailable on macOS runners). Only ``console`` is
+# hard-required (``_REQUIRED_CHANNEL_KEYS = frozenset({"console"})``). Tests
+# must therefore NOT assert the full hard-coded set as mandatory — only the
+# guaranteed-required subset.
 _REQUIRED_BUILTIN_TYPES = {"console"}
 
-# Known built-in channel keys declared in ``registry._BUILTIN_SPECS``. Used only
-# as a sanity upper-bound (the API must return a subset of these), never as a
-# hard equality / containment assertion, since any may be absent at runtime.
+# Known built-in channel keys declared in ``registry._BUILTIN_SPECS``.
+# Used only as a sanity upper-bound (the API must return a subset of
+# these), never as a hard equality / containment assertion.
 _KNOWN_BUILTIN_TYPES = {
     "console",
     "discord",
@@ -63,22 +63,13 @@ _KNOWN_BUILTIN_TYPES = {
 @pytest.mark.p1
 def test_channel_types_returns_all_builtin(app_server) -> None:
     """Test purpose:
-    - Verify GET /api/config/channels/types lists built-in channel types.
-
-    Contract (per ``registry._load_builtin_channels``):
-    - Returns a non-empty ``list`` of channel keys.
-    - Always includes the hard-required ``console`` channel.
-    - May omit any soft-dependency channel whose third-party SDK is not
-      installed on the current platform (e.g. ``feishu`` when ``lark-oapi``
-      is absent on macOS). Such channels are skipped at runtime by design.
-    - Every returned key must be a known built-in (no plugin/unknown leakage
-      into this endpoint's contract beyond the declared built-in set).
+    - Verify GET /api/config/channels/types lists all 17 builtin
+      channel types.
 
     Test flow:
     1. GET /api/config/channels/types.
-    2. Assert 200 + response is a non-empty list.
-    3. Assert the required ``console`` channel is present.
-    4. Assert every returned key is a known built-in type.
+    2. Assert response is a list containing at least the 17 known
+       builtin channel keys.
 
     API endpoints:
     - GET /api/config/channels/types
@@ -96,13 +87,13 @@ def test_channel_types_returns_all_builtin(app_server) -> None:
 
     # Hard-required channel must always be present.
     missing_required = _REQUIRED_BUILTIN_TYPES - type_set
-    assert not missing_required, (
-        f"missing required built-in types: {missing_required}"
-    )
+    assert (
+        not missing_required
+    ), f"missing required built-in types: {missing_required}"
 
     # No unknown / non-built-in keys should leak into the response.
     unknown = type_set - _KNOWN_BUILTIN_TYPES
-    assert not unknown, f"unexpected non-built-in channel types: {unknown}"
+    assert not unknown, f"unexpected types: {unknown}"
 
 
 @pytest.mark.integration

@@ -802,9 +802,10 @@ def test_offload_while_running(
       - GET  /api/tool-calls/{session_id}/{tool_call_id}
     """
     try:
-        # Windows CI runners can complete the sleep(10) tool call faster than
-        # the poll loop catches the entry, causing a 404 on the subsequent
-        # offload POST. Retry up to 2 times: re-submit + immediately offload.
+        # Windows CI runners can complete the sleep(10) tool call faster
+        # than the poll loop catches the entry, causing a 404 on the
+        # subsequent offload POST. Retry up to 2 times: re-submit +
+        # immediately offload.
         resp = None
         session_id = None
         entry = None
@@ -819,10 +820,8 @@ def test_offload_while_running(
 
             resp = app_server.api_request(
                 "POST",
-                (
-                    f"/api/tool-calls/{session_id}/"
-                    f"{entry['tool_call_id']}/offload"
-                ),
+                f"/api/tool-calls/{session_id}/"
+                f"{entry['tool_call_id']}/offload",
                 timeout=_HTTP_TIMEOUT,
             )
             if resp.status_code == 202:
@@ -835,6 +834,10 @@ def test_offload_while_running(
             time.sleep(1.0)
 
         assert resp is not None
+        assert entry is not None, (
+            "no tool-call entry observed across retries: "
+            f"{app_server.logs_tail()[-2000:]}"
+        )
         assert resp.status_code == 202, (
             f"offload failed after retry: {resp.status_code} "
             f"{resp.text} / {app_server.logs_tail()[-2000:]}"

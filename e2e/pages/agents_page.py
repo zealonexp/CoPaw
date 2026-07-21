@@ -63,8 +63,16 @@ class AgentsPage(BasePage):
     # nth-child fallbacks that reflect the CURRENT 4-button layout.
     PIN_BTN = 'button:has(.anticon-pushpin), .qwenpaw-space-item:nth-child(1) button'
     EDIT_BTN = 'button:has(.anticon-edit), .qwenpaw-space-item:nth-child(2) button'
-    TOGGLE_BTN = 'button:has(.anticon-eye), button:has(.anticon-eye-invisible), .qwenpaw-space-item:nth-child(3) button'
-    DELETE_BTN = 'button.qwenpaw-btn-dangerous, button:has(.anticon-delete), .qwenpaw-space-item:nth-child(4) button'
+    TOGGLE_BTN = (
+        'button:has(.anticon-eye), '
+        'button:has(.anticon-eye-invisible), '
+        '.qwenpaw-space-item:nth-child(3) button'
+    )
+    DELETE_BTN = (
+        'button.qwenpaw-btn-dangerous, '
+        'button:has(.anticon-delete), '
+        '.qwenpaw-space-item:nth-child(4) button'
+    )
     ENABLE_TOGGLE = TOGGLE_BTN
     REFRESH_BTN = 'button:has(.anticon-reload), button:has(.spark-icon-spark-refresh-line)'
 
